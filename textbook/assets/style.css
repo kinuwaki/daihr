@@ -1,0 +1,148 @@
+/* 教科書の見た目。
+   動画パイプライン（lecture/templates/slide.css）と同じ配色にしてあるので、
+   教科書を読んでから動画を見たときに色の意味がぶれない。
+   term=青（重要語）/ term-x=赤（誤り・否定） */
+
+:root {
+  --ink:      #1b2430;
+  --ink-soft: #55616f;
+  --accent:   #1565C0;
+  --wrong:    #c0392b;
+  --bg:       #f4f6f9;
+  --card:     #ffffff;
+  --line:     #d3dce6;
+  --law-bg:   #eef3fa;
+  --pit-bg:   #fff7ed;
+  --case-bg:  #f3f7f4;
+  --gold:     #E68A00;
+  --deep:     #0d1b2a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic",
+               "Noto Sans JP", system-ui, sans-serif;
+  line-height: 1.9;
+  font-feature-settings: "palt" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 章の扉 ─────────────────────────────── */
+.page-hero {
+  background: var(--deep);
+  color: #fff;
+  padding: 64px 32px 56px;
+  text-align: center;
+}
+.page-hero .kicker {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: .12em;
+  padding: 6px 16px; border-radius: 999px;
+  margin-bottom: 20px;
+}
+.page-hero h1 {
+  margin: 0 0 20px;
+  font-size: 34px; line-height: 1.5;
+}
+.page-hero h1 .sub {
+  display: block;
+  font-size: 19px; font-weight: 400;
+  color: #b9c6d6; margin-top: 10px;
+}
+.page-hero .lead {
+  max-width: 760px; margin: 0 auto;
+  font-size: 16px; color: #d5dfea;
+}
+
+/* ── 本文 ───────────────────────────────── */
+.article {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 48px 24px 96px;
+}
+.article section { margin-bottom: 64px; }
+
+h2 {
+  font-size: 27px;
+  color: var(--deep);
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 12px;
+  margin: 0 0 28px;
+}
+h3 {
+  font-size: 21px;
+  color: var(--deep);
+  border-left: 5px solid var(--gold);
+  padding-left: 14px;
+  margin: 40px 0 18px;
+}
+h4 { font-size: 18px; margin: 0 0 12px; color: var(--deep); }
+p  { margin: 0 0 20px; }
+
+.term   { color: var(--accent); font-weight: 700; }
+.term-x { color: var(--wrong);  font-weight: 700; }
+
+/* ── ボックス ───────────────────────────── */
+.law-box, .pitfall-box, .case-box {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 24px 28px;
+  margin: 28px 0;
+}
+.law-box     { background: var(--law-bg);  border-left: 6px solid var(--accent); }
+.pitfall-box { background: var(--pit-bg);  border-left: 6px solid var(--gold); }
+.case-box    { background: var(--case-bg); border-left: 6px solid var(--ink-soft); }
+
+.law-box h4::before     { content: "📐 "; }
+.pitfall-box h4::before { content: "⚠️ "; }
+.case-box h4::before    { content: "💡 "; }
+
+.law-box p:last-child,
+.pitfall-box p:last-child,
+.case-box p:last-child { margin-bottom: 0; }
+
+.article { counter-reset: none; }
+.law-box .article { all: unset; }   /* span.article と .article の衝突回避 */
+
+.law-box span.article b {
+  display: inline-block;
+  color: var(--accent);
+  margin-right: 8px;
+}
+
+/* ── 表 ─────────────────────────────────── */
+table.timeline {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 28px 0;
+  background: var(--card);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(13,27,42,.08);
+}
+table.timeline th {
+  background: var(--law-bg);
+  color: var(--accent);
+  text-align: left;
+  font-size: 16px;
+  padding: 14px 20px;
+  border-bottom: 2px solid var(--line);
+}
+table.timeline td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+table.timeline tr:last-child td { border-bottom: none; }
+
+@media (max-width: 640px) {
+  .page-hero h1 { font-size: 26px; }
+  .article { padding: 32px 18px 64px; }
+  h2 { font-size: 23px; }
+}

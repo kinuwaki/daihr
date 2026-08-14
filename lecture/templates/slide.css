@@ -1,0 +1,255 @@
+/* ビデオスライド 1920x1080（daihr 版）
+   配色はウェブ教科書 app/bijihou/textbook/assets/style.css から取っている。
+   bijihou は「深緑＋金」。fukushi2 のオレンジ系とは別テーマなので値を差し替えてある。
+   term=#2E7D32（重要語・緑）/ term-x=#c0392b（誤り・否定・赤）は教科書と同じ意味付けで、
+   教科書を読んでから動画を見たときに色の意味がぶれないようにしている。 */
+
+:root {
+  --ink:      #1b2430;   /* 本文の文字色 */
+  --ink-soft: #55616f;
+  --accent:   #1565C0;   /* 重要語（青）— HRツールらしい落ち着いた色 */
+  --wrong:    #c0392b;   /* 誤り・否定（赤） */
+  --bg:       #f4f6f9;
+  --card:     #ffffff;
+  --line:     #d3dce6;
+  --law-bg:   #eef3fa;   /* 制度・定義カード */
+  --pit-bg:   #fff7ed;   /* まちがえやすい点 */
+  --case-bg:  #f3f7f4;   /* 事例 */
+  --gold:     #E68A00;   /* 差し色 */
+  --deep:     #0d1b2a;   /* 見出し */
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 1920px; height: 1080px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic",
+               "Noto Sans JP", system-ui, sans-serif;
+  font-feature-settings: "palt" 1;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.slide {
+  position: relative;
+  width: 1920px; height: 1080px;
+  display: flex; flex-direction: column;
+  padding: 54px 96px 72px;
+}
+
+/* ── 上部バー ───────────────────────────── */
+.topbar {
+  display: flex; align-items: baseline; gap: 20px;
+  font-size: 26px; color: var(--ink-soft);
+  border-bottom: 3px solid var(--line);
+  padding-bottom: 18px; margin-bottom: 44px;
+  flex: 0 0 auto;
+}
+.topbar .ch { color: var(--accent); font-weight: 700; }
+.topbar .sep { opacity: .4; }
+.topbar .heading {
+  margin-left: auto; font-size: 24px; max-width: 900px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── 本体 ───────────────────────────────── */
+.stage { flex: 1 1 auto; display: flex; flex-direction: column;
+         justify-content: center; min-height: 0; }
+
+/* ── 下部 ───────────────────────────────── */
+.footer {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 24px;
+  font-size: 20px; color: var(--ink-soft); opacity: .75;
+  padding-top: 20px;
+}
+.footer .credit { margin-left: auto; font-size: 18px; letter-spacing: .02em; }
+
+/* ── キーワード ─────────────────────────── */
+.term   { color: var(--accent); font-weight: 700; }
+.term-x { color: var(--wrong);  font-weight: 700; }
+
+/* ── タイトル ───────────────────────────── */
+.title-slide { align-items: center; text-align: center; gap: 28px; }
+.title-slide .kicker { font-size: 32px; color: var(--accent); font-weight: 700;
+                       letter-spacing: .08em; }
+.title-slide .chapter { font-size: 40px; color: var(--ink-soft); }
+.title-slide h1 { font-size: 92px; line-height: 1.25; font-weight: 800;
+                  letter-spacing: -.01em; max-width: 1500px; }
+.title-slide .sub { font-size: 34px; color: var(--ink-soft); }
+.title-slide .rule { width: 200px; height: 6px; background: var(--accent);
+                     border-radius: 3px; margin: 10px 0; }
+
+/* ── 節見出し ───────────────────────────── */
+.heading-slide { align-items: flex-start; gap: 34px; }
+.heading-slide .bar { width: 120px; height: 10px; background: var(--accent);
+                      border-radius: 5px; }
+.heading-slide h2 { font-size: 76px; line-height: 1.3; font-weight: 800;
+                    max-width: 1600px; }
+
+/* ── 本文 ───────────────────────────────── */
+.body-text {
+  font-size: 52px; line-height: 1.72; letter-spacing: .005em;
+  max-width: 1660px; margin: 0 auto; font-weight: 500;
+}
+.body-text.long  { font-size: 46px; line-height: 1.68; }
+.body-text.short { font-size: 60px; line-height: 1.66; }
+
+/* ── 箇条書き ───────────────────────────── */
+.bullets { display: flex; flex-direction: column; gap: 26px; max-width: 1660px;
+           margin: 0 auto; width: 100%; }
+.bullets li { list-style: none; display: flex; gap: 24px; align-items: flex-start;
+              font-size: 42px; line-height: 1.55; opacity: .34;
+              transition: none; }
+.bullets li.on   { opacity: 1; }
+.bullets li.focus { opacity: 1; }
+.bullets .num {
+  flex: 0 0 auto; width: 54px; height: 54px; border-radius: 27px;
+  background: var(--line); color: var(--ink); font-size: 28px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin-top: 6px;
+}
+.bullets li.focus .num { background: var(--accent); color: #fff; }
+.bullets .label { font-weight: 700; color: var(--accent); }
+
+/* ── カード（制度・事例・まとめ・まちがい） ── */
+.card { border-radius: 18px; padding: 46px 54px; }
+.card h3 { font-size: 40px; margin-bottom: 30px; display: flex; align-items: center;
+           gap: 16px; font-weight: 800; }
+.card .badge { font-size: 38px; }
+.card-law     { background: var(--law-bg);  border: 2px solid var(--line);
+                border-left: 12px solid var(--accent); }
+.card-pitfall { background: var(--pit-bg);  border: 2px solid var(--line);
+                border-left: 12px solid var(--gold); }
+.card-point   { background: var(--card);    border: 2px solid var(--line);
+                border-left: 12px solid var(--gold); }
+.card-case    { background: var(--case-bg); border: 2px solid var(--line); }
+.card .text { font-size: 44px; line-height: 1.68; }
+.card.tight .text { font-size: 40px; line-height: 1.6; }
+
+/* ── ✕／○ 対比 ─────────────────────────── */
+.compare { display: flex; gap: 40px; align-items: stretch; }
+.compare .col { flex: 1 1 0; border-radius: 18px; padding: 40px 44px;
+                display: flex; flex-direction: column; gap: 22px; }
+.compare .col.x { background: #fdf0ee; border: 3px solid #e8c4bd; }
+.compare .col.o { background: var(--law-bg); border: 3px solid var(--accent); }
+.compare .mark { font-size: 64px; font-weight: 800; line-height: 1; }
+.compare .col.x .mark { color: var(--wrong); }
+.compare .col.o .mark { color: var(--accent); }
+.compare .col .lead { font-size: 26px; color: var(--ink-soft); font-weight: 700;
+                      letter-spacing: .06em; }
+.compare .item { font-size: 40px; line-height: 1.5; font-weight: 700; }
+.compare .col.x .item { color: var(--wrong); }
+.compare .col.o .item { color: var(--accent); }
+
+/* ── 図 ─────────────────────────────────── */
+.figure-slide { align-items: center; gap: 26px; }
+.figure-slide img { max-width: 1300px; max-height: 690px; border-radius: 16px;
+                    border: 3px solid var(--line); object-fit: contain; }
+.figure-slide .ftitle { font-size: 38px; font-weight: 800; color: var(--accent); }
+.figure-slide .caption { font-size: 30px; color: var(--ink-soft); max-width: 1500px;
+                         text-align: center; line-height: 1.5; }
+
+/* ── 表 ─────────────────────────────────── */
+table { border-collapse: collapse; margin: 0 auto; width: 100%; max-width: 1660px;
+        font-size: 36px; background: var(--card); border-radius: 14px;
+        overflow: hidden; }
+th, td { border: 2px solid var(--line); padding: 24px 28px; text-align: left;
+         line-height: 1.45; vertical-align: top; }
+th { background: var(--law-bg); font-weight: 800; color: var(--accent);
+     font-size: 34px; }
+
+/* ── 生徒の吹き出し ─────────────────────── */
+/* .stage が flex-direction:column なので、横並びに戻す必要がある */
+.dialogue { display: flex; flex-direction: row; justify-content: flex-end;
+            align-items: center; gap: 30px; padding-right: 40px; }
+.dialogue .bubble {
+  position: relative; max-width: 1180px; background: var(--card);
+  border: 4px solid var(--accent); border-radius: 28px; padding: 44px 56px;
+  font-size: 50px; line-height: 1.55; font-weight: 600;
+}
+.dialogue .bubble::after {
+  content: ""; position: absolute; right: -22px; top: 50%; margin-top: -18px;
+  width: 0; height: 0; border-left: 24px solid var(--accent);
+  border-top: 18px solid transparent; border-bottom: 18px solid transparent;
+}
+/* キャラクターのイラストは音声とは別の利用条件があるので使わない。役名のみを出す */
+.dialogue .who {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
+  width: 140px; font-size: 26px; font-weight: 800; color: var(--accent);
+}
+.dialogue .who .chip {
+  display: flex; align-items: center; justify-content: center;
+  width: 124px; height: 124px; border-radius: 62px;
+  border: 5px solid var(--accent); background: var(--card);
+  font-size: 38px; letter-spacing: -.02em;
+}
+
+/* ── まちがえやすいポイントの導入（✕が無いとき） ── */
+.chips { display: flex; flex-wrap: wrap; gap: 22px; }
+.chips .chip {
+  font-size: 40px; font-weight: 800; color: var(--accent);
+  background: var(--card); border: 3px solid var(--line);
+  border-radius: 999px; padding: 18px 40px;
+}
+.chips .chip.term-x { color: var(--wrong); border-color: #e8c4bd; }
+.chips-lead { font-size: 28px; color: var(--ink-soft); font-weight: 700;
+              letter-spacing: .06em; margin-bottom: 22px; }
+
+/* ── 終了 ───────────────────────────────── */
+.outro-slide { align-items: center; text-align: center; gap: 34px; }
+.outro-slide h2 { font-size: 82px; font-weight: 800; }
+.outro-slide .app { font-size: 44px; color: var(--accent); font-weight: 800; }
+.outro-slide .note { font-size: 30px; color: var(--ink-soft); line-height: 1.6; }
+.outro-slide .credits { font-size: 26px; color: var(--ink-soft); margin-top: 12px;
+                        line-height: 1.7; }
+
+/* ── 授業プレゼン型（LLM生成）のスライド ───── */
+/* 画面は「要約された要点」、音声は「話し言葉」。別物なので読み上げ文は載せない。
+   要点は上から順に点灯し、いま話している項目だけを濃く大きく出す。 */
+.stage.tk { justify-content: flex-start; padding-top: 30px; }
+.tk-head {
+  font-size: 54px; font-weight: 800; color: var(--deep);
+  border-left: 12px solid var(--accent); padding-left: 30px;
+  margin: 0 auto 54px; max-width: 1680px; width: 100%; line-height: 1.3;
+}
+.tk-lines { flex: 1 1 auto; max-width: 1680px; width: 100%; margin: 0 auto;
+            display: flex; flex-direction: column; gap: 40px; }
+.tk-line { display: flex; gap: 28px; align-items: flex-start; }
+.tk-line .mk {
+  flex: 0 0 auto; width: 20px; height: 20px; border-radius: 4px;
+  background: var(--line); margin-top: 22px; transform: rotate(45deg);
+}
+.tk-line .t { font-size: 50px; line-height: 1.5; }
+.tk-line.past { opacity: .5; }
+/* 02b では1カット=1スライドなので、要点は全部見せて現在だけ強調する
+   （opacity:0 にすると focus より後ろの要点が一度も表示されなかった） */
+.tk-line.ahead { opacity: .5; }
+.tk-line.now .mk { background: var(--accent); width: 26px; height: 26px; }
+.tk-line.now .t { font-size: 58px; font-weight: 700; color: var(--deep); }
+
+/* ── 問いスライド ───────────────────────── */
+/* 論点の入口。答えの前に「間」を作るのが役目なので問いだけを大きく出す。
+   画面が急に変わることで、単調さを切る役割も持たせている。 */
+.q-slide { align-items: center; justify-content: center; text-align: center; gap: 46px; }
+.q-slide .q-mark {
+  width: 132px; height: 132px; border-radius: 66px;
+  background: var(--accent); color: #fff;
+  font-size: 84px; font-weight: 800; line-height: 132px;
+}
+.q-slide .q-text {
+  font-size: 78px; font-weight: 800; line-height: 1.4;
+  color: var(--deep); max-width: 1500px;
+}
+
+/* ── 数値の強調スライド ─────────────────── */
+/* 「20年」「60日」のような覚えてほしい数字を1枚使って出す。 */
+.n-slide { align-items: center; justify-content: center; text-align: center; gap: 30px; }
+.n-slide .n-value {
+  font-size: 260px; font-weight: 800; line-height: 1.05;
+  color: var(--accent); letter-spacing: -.02em;
+}
+.n-slide .n-label {
+  font-size: 52px; font-weight: 700; color: var(--deep);
+  border-top: 6px solid var(--gold); padding-top: 28px; max-width: 1400px;
+}

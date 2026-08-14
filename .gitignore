@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# 動画生成の中間物（mp4/SRT/台本は残す）
+lecture/out/slides/
+lecture/out/audio/
+lecture/out/lecture/
+lecture/out/*.log
+lecture/out/video/*/
