@@ -9,3 +9,6 @@ lecture/out/audio/
 lecture/out/lecture/
 lecture/out/*.log
 lecture/out/video/*/
+# 節ごとの分割版は結合版があれば不要（08_concat.py で作り直せる）
+lecture/out/video/*_s0*.mp4
+lecture/out/video/*_s0*.srt
