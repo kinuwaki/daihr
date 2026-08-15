@@ -103,6 +103,49 @@ ol.chapters .t { flex: 1 1 auto; }
 }
 .links a:hover { border-color: var(--accent); }
 
+/* ── 再生速度 ───────────────────────────── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.controls .label {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-right: 2px;
+}
+.controls button {
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.controls button:hover { border-color: var(--accent); }
+.controls button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* 字幕。既定のままだと大きすぎて画面を覆うので抑える */
+video::cue {
+  font-size: 0.62em;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, .72);
+  color: #fff;
+}
+@media (max-width: 600px) {
+  video::cue { font-size: 0.8em; }
+}
+
 footer {
   text-align: center;
   color: var(--ink-soft);
@@ -138,8 +181,18 @@ footer {
     <a href="hr_ch01_full.mp4">ダウンロード</a>してご覧ください。
   </video>
 
+  <div class="controls">
+    <span class="label">再生速度</span>
+    <button data-rate="1" aria-pressed="true">1×</button>
+    <button data-rate="1.25">1.25×</button>
+    <button data-rate="1.5">1.5×</button>
+    <button data-rate="1.75">1.75×</button>
+    <button data-rate="2">2×</button>
+    <button id="cc" aria-pressed="true">字幕</button>
+  </div>
+
   <div class="note">
-    字幕は再生プレイヤーの字幕ボタンから切り替えられます。
+    速度は選択が保存され、次に開いたときも維持されます。
     節のボタンを押すとその位置から再生します。
   </div>
 
@@ -169,6 +222,8 @@ footer {
 
 <script>
   const v = document.getElementById('v');
+
+  // 節のジャンプ
   for (const b of document.querySelectorAll('.chapters button')) {
     b.addEventListener('click', () => {
       v.currentTime = Number(b.dataset.t);
@@ -176,6 +231,60 @@ footer {
       v.scrollIntoView({behavior: 'smooth', block: 'start'});
     });
   }
+
+  // 再生速度。選択は localStorage に残す
+  const rateButtons = [...document.querySelectorAll('.controls [data-rate]')];
+  function applyRate(rate) {
+    v.playbackRate = rate;
+    for (const b of rateButtons) {
+      b.setAttribute('aria-pressed',
+                     String(Number(b.dataset.rate) === rate));
+    }
+    try { localStorage.setItem('kikuhr-rate', String(rate)); } catch (e) {}
+  }
+  for (const b of rateButtons) {
+    b.addEventListener('click', () => applyRate(Number(b.dataset.rate)));
+  }
+  let saved = 1;
+  try { saved = Number(localStorage.getItem('kikuhr-rate')) || 1; } catch (e) {}
+  if (rateButtons.some(b => Number(b.dataset.rate) === saved)) applyRate(saved);
+
+  // 動画を読み込み直しても速度が戻らないようにする
+  v.addEventListener('loadedmetadata', () => { v.playbackRate = v.playbackRate; });
+
+  // 字幕のオン・オフ。ブラウザ既定のUIからも切り替えられるが、
+  // 表に出しておかないと気づかれないので独立したボタンを置く
+  const cc = document.getElementById('cc');
+  function track() { return v.textTracks && v.textTracks[0]; }
+  cc.addEventListener('click', () => {
+    const t = track();
+    if (!t) return;
+    const on = t.mode !== 'showing';
+    t.mode = on ? 'showing' : 'hidden';
+    cc.setAttribute('aria-pressed', String(on));
+    try { localStorage.setItem('kikuhr-cc', on ? '1' : '0'); } catch (e) {}
+  });
+  v.addEventListener('loadedmetadata', () => {
+    const t = track();
+    if (!t) return;
+    let on = true;
+    try {
+      const s = localStorage.getItem('kikuhr-cc');
+      if (s !== null) on = s === '1';
+    } catch (e) {}
+    t.mode = on ? 'showing' : 'hidden';
+    cc.setAttribute('aria-pressed', String(on));
+  });
+
+  // キーボード操作。J/L で10秒送り戻し、K で再生停止（動画プレイヤーの慣例）
+  document.addEventListener('keydown', (ev) => {
+    if (['INPUT', 'TEXTAREA'].includes(ev.target.tagName)) return;
+    if (ev.key === 'j') v.currentTime -= 10;
+    else if (ev.key === 'l') v.currentTime += 10;
+    else if (ev.key === 'k') v.paused ? v.play() : v.pause();
+    else return;
+    ev.preventDefault();
+  });
 </script>
 
 </body>

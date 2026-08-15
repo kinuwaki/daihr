@@ -21,6 +21,7 @@ python3 02b_build_lecture.py  --level hr --chapter 1 # 構造JSON → 台本
 python3 03_review_script.py   --level hr             # 検証（必須）
 python3 07_build_videos.py    --level hr --chapter 1 # スライド→音声→動画
 python3 08_concat.py          --level hr --chapter 1 # 節ごとの動画を1本に結合
+python3 09_make_vtt.py --level hr --chapter 1 --out ../docs/hr_ch01_full.vtt
 ```
 
 所要時間の実測（6節・25.7分の動画）: 台本生成 約3分 / 動画ビルド 11.4分。
@@ -37,6 +38,7 @@ python3 08_concat.py          --level hr --chapter 1 # 節ごとの動画を1本
 06_compose_video.py     PNG＋音声 → mp4 ＋ SRT
 07_build_videos.py      04→05→06 をまとめて実行
 08_concat.py            節ごとの mp4 と SRT を1本に結合（再エンコードなし）
+09_make_vtt.py          SRT → WebVTT。ウェブ再生向けに字幕を短く割り直す
 templates/slide.css     スライドの見た目
 dict/yomi.json          読み辞書
 ```
@@ -90,6 +92,9 @@ span.term         重要語 / span.term-x 誤り・否定
 - **記号は辞書では直らない** — `「」・%→` は前処理で潰す。`03` が残存を検査する
 - **zoompan は使えない** — 静止画1枚13秒に実測217秒。クロスフェードのみにする
 - **CSSは後勝ちに注意** — 追記後は必ず実物をレンダリングして見る
+- **SRTをそのままVTTにしない** — 台本の1カット＝1字幕なので1件が平均85字・3行になり、
+  画面下部を覆ってスライドが読めなくなる。`09_make_vtt.py` で句点ごとに割り直し、
+  1件2行・最大40字に収める（104件 → 450件）。あわせて `video::cue` で文字サイズも抑える
 - **映像は音声より最大1フレーム短くなる** — `-r 25` だと映像長が 0.04 秒刻みに
   量子化されるため、音声長との差が最大 0.056 秒出る。字幕と音声は一致しているので
   実害は無い（最後のフレームが静止するだけ）。厳密に合わせたい場合は
