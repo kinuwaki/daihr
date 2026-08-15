@@ -16,6 +16,7 @@
 | **[RecSys in HR 2025](recsys-in-hr-2025.md)** | HR特化ワークショップの最新回。全9本を精読 |
 | **[RecSys in HR 2024](recsys-in-hr-2024.md)** | 同 前年回。全10本を精読 |
 | **[日本国内の人材マッチング技術](japan-hr-tech.md)** | 国内学会と企業技術ブログ。**日本語で読める実務知見** |
+| **[スキル定義化・スキル正規化](skill-extraction-normalization.md)** | スキル抽出と正規化の専門サーベイ。**用語定義・公開データ・ESCO公式評価** |
 | [Daigas向け調査レポート](daigas-report.md) | 特定企業向けの導入検討資料 |
 | [設計メモ](design.md) | PoC実装の設計判断 |
 
