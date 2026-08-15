@@ -1,14 +1,17 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
+
+# macOS
 .DS_Store
 
-# 動画生成の中間物（mp4/SRT/台本は残す）
+# 動画生成の中間物。07→08 で作り直せる
 lecture/out/slides/
 lecture/out/audio/
 lecture/out/lecture/
+lecture/out/video/
 lecture/out/*.log
-lecture/out/video/*/
-# 節ごとの分割版は結合版があれば不要（08_concat.py で作り直せる）
-lecture/out/video/*_s0*.mp4
-lecture/out/video/*_s0*.srt
+
+# 公開版の動画は docs/ に置く（Pages で配信するため）
+# 節ごとの分割版は結合版があれば不要
