@@ -143,6 +143,28 @@ def hard_filter(emp: Employee, pos: Position) -> tuple[bool, str]:
     return True, ""
 
 
+# スキル名の表記ゆれを吸収するか。
+# False なら完全一致のみ（従来の挙動）。実データでは表記ゆれが必ず出るので
+# True を既定にするが、埋め込みモデルが無い環境では文字類似度に落ちる。
+FUZZY_SKILLS = True
+
+
+def _level_of(emp: Employee, skill: str) -> int:
+    """社員が持つ、そのスキルの習熟度。表記ゆれを吸収する。
+
+    完全一致があればそれを使う。無い場合だけ類似検索するので、
+    スキル定義が整っている環境では従来と同じ挙動になる。
+    """
+    have = emp.skills.get(skill)
+    if have is not None:
+        return have
+    if not FUZZY_SKILLS:
+        return 0
+    from embedding import resolve_level
+    level, _, _ = resolve_level(skill, emp.skills)
+    return level
+
+
 def skill_score(emp: Employee, pos: Position) -> tuple[float, float, list[str], list]:
     """必須スキルの充足度を主、歓迎スキルを従として評価。
 
@@ -153,7 +175,7 @@ def skill_score(emp: Employee, pos: Position) -> tuple[float, float, list[str], 
     matched, missing = [], []
     req_total = 0.0
     for name, need in pos.required_skills.items():
-        have = emp.skills.get(name, 0)
+        have = _level_of(emp, name)
         ratio = min(1.0, have / need) if need else 1.0
         req_total += ratio
         if have >= need:
@@ -164,7 +186,7 @@ def skill_score(emp: Employee, pos: Position) -> tuple[float, float, list[str], 
 
     pref_total = 0.0
     for name, need in pos.preferred_skills.items():
-        have = emp.skills.get(name, 0)
+        have = _level_of(emp, name)
         if have > 0:
             pref_total += min(1.0, have / need) if need else 1.0
             if have >= need:
