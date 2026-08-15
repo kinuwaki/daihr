@@ -49,7 +49,7 @@ def emp_with(skills):
 
 # 教科書・動画に載せている数値。重みを変えたらここも更新すること
 # （更新し忘れると教科書と実装がずれるので、このテストが落ちて気づける）
-expected = {0.0: None, 0.25: None, 0.5: 0.282, 1.0: 0.529}
+expected = {0.0: None, 0.25: None, 0.5: 0.394, 1.0: 0.608}
 cases = {
     0.0: {},
     0.25: {"法人営業": 2},
@@ -166,6 +166,47 @@ else:
 # スコアは単調（人数が増えれば下がらない）
 vals = [1.0 - 0.45 ** min(k, 8) for k in range(1, 10)]
 check("人数に対して単調増加", all(a <= b for a, b in zip(vals, vals[1:])))
+
+# ---------------------------------------------------------------- 4.6
+print("\n── 4.6 正規化（設定重みと実効重みの一致） ──")
+
+import statistics
+
+from matcher import (SCORE_STATS, WEIGHTS, competency_score, growth_score,
+                     hard_filter, normalize, wish_score)
+from matcher import collab_score as _collab
+from matcher import skill_score as _skill
+
+raw = {k: [] for k in WEIGHTS}
+for p_ in positions:
+    for e_ in employees:
+        okf, _ = hard_filter(e_, p_)
+        if not okf:
+            continue
+        sk_, _, _, _ = _skill(e_, p_)
+        cp_, _, _ = competency_score(e_, p_)
+        raw["skill"].append(sk_)
+        raw["comp"].append(cp_)
+        raw["wish"].append(wish_score(e_, p_))
+        raw["collab"].append(_collab(e_, p_, graph))
+        raw["growth"].append(growth_score(e_, p_))
+        raw["network"].append(net.score(e_.emp_id, p_.dept)[0])
+
+# 正規化後の実効重み = 重み × 平均寄与 の構成比
+eff = {k: WEIGHTS[k] * statistics.mean([normalize(k, x) for x in v])
+       for k, v in raw.items()}
+total_eff = sum(eff.values())
+worst_gap = max(abs(eff[k] / total_eff - WEIGHTS[k]) for k in WEIGHTS)
+check("設定重みと実効重みの差が 5ポイント以内", worst_gap <= 0.05,
+      f"最大差 {worst_gap:.1%}")
+
+# 正規化は単調変換でなければならない（スコア内部の順序を変えない）
+mono = all(
+    normalize(k, a) <= normalize(k, b)
+    for k in SCORE_STATS
+    for a, b in zip([0.0, 0.2, 0.4, 0.6, 0.8], [0.2, 0.4, 0.6, 0.8, 1.0])
+)
+check("正規化が単調変換である", mono)
 
 # ---------------------------------------------------------------- 5
 print("\n── 5. 保護属性が特徴量に混ざっていない ──")

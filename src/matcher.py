@@ -17,15 +17,70 @@ from dataclasses import dataclass, field
 
 from schema import Employee, Position, TransferRecord
 
-# 各スコアの重み。人事と調整する前提で外出ししてある
+# 各スコアの重み。人事と調整する前提で外出ししてある。
+#
+# 重みを学習で最適化していないのは手抜きではない。小標本かつノイズの多い
+# データでは、重みの最適化はほとんど価値がないことが知られている
+# （Dawes 1979, "The robust beauty of improper linear models in decision making",
+#  American Psychologist 34(7), 571-582）。固定重みは自由度を消費しないので
+# 過学習しない。社内異動は年間の成立件数が数百件規模なので、この領域にあたる。
+#
+# 重みの相対的な大小には根拠を置いている。自己申告で操作できるシグナル
+# （本人希望）と、推定でノイズが多いシグナル（人的つながり）は、
+# 検証可能なシグナル（スキル・評価）より軽くする
+# （Milli, Pierson & Garg, arXiv:2305.17428）。
 WEIGHTS = {
     "skill": 0.33,
     "comp": 0.19,     # コンピテンシー評価との適合
-    "wish": 0.19,
+    "wish": 0.19,     # 自己申告＝操作可能なので重くしない
     "collab": 0.14,
     "growth": 0.09,
-    "network": 0.06,  # 異動先に顔見知りがいるか
+    "network": 0.06,  # 推定＝ノイズが多いので最も軽い
 }
+
+# 各スコアの実測分布。ハードフィルタ通過後の全組み合わせで測った値。
+#
+# 値域を 0..1 に揃えるだけでは不十分で、分布の形が揃っていないと
+# 「設定した重み」と「実効的な重み」がずれる。実測したところ、
+# スキル適合は平均0.08（77%がゼロ）、コンピテンシーは平均0.74と大きく偏り、
+# 重み上は最重視のスキルより、コンピテンシーが順位を支配していた。
+#
+# 合成方法（加重和かLTRか）を変えるより、この正規化を直す方が効く
+# （Montague & Aslam, CIKM 2001, "Relevance score normalization for metasearch"）。
+#
+# 実データに載せ替えたら必ず測り直すこと。分布が変われば較正も変わる。
+SCORE_STATS = {
+    "skill":   {"mean": 0.08, "std": 0.17},
+    "comp":    {"mean": 0.74, "std": 0.22},
+    "wish":    {"mean": 0.52, "std": 0.22},
+    "collab":  {"mean": 0.37, "std": 0.35},
+    "growth":  {"mean": 0.12, "std": 0.26},
+    "network": {"mean": 0.28, "std": 0.33},
+}
+
+# 正規化を有効にするか。False なら生スコアをそのまま加重和にかける
+# （旧来の挙動。比較のために残してある）
+NORMALIZE = True
+
+
+def normalize(name: str, value: float) -> float:
+    """スコアを実測分布で標準化し、0..1 に戻す。
+
+    z = (x - mean) / std で中心と広がりを揃えたうえで、
+    ロジスティック関数で 0..1 に押し戻す。単調変換なので
+    各スコア内部の順序は保たれ、スコア間の比較可能性だけが上がる。
+
+    分布の裾が重いスコア（多くがゼロ）を min-max で潰すと差が消えるため、
+    z標準化を使っている。
+    """
+    if not NORMALIZE:
+        return value
+    st = SCORE_STATS.get(name)
+    if not st or st["std"] <= 0:
+        return value
+    z = (value - st["mean"]) / st["std"]
+    # ロジスティック。z=0 で 0.5、z=±2 で 0.12/0.88 程度に収まる
+    return 1.0 / (1.0 + 2.718281828 ** (-z))
 
 # 必須スキルの充足率がこれ未満の候補は推薦しない。
 # 加重和だけで順位付けすると「必須スキルがゼロなのに本人希望と
@@ -257,9 +312,14 @@ def score_pair(emp: Employee, pos: Position, graph: dict,
     gr = growth_score(emp, pos)
     nw, peers = net.score(emp.emp_id, pos.dept) if net else (0.0, 0)
 
-    weighted = (WEIGHTS["skill"] * sk + WEIGHTS["comp"] * cp
-                + WEIGHTS["wish"] * wi + WEIGHTS["collab"] * co
-                + WEIGHTS["growth"] * gr + WEIGHTS["network"] * nw)
+    # 加重和の前に正規化する。生の値を足すと、平均の高いスコアが
+    # 重みに関わらず順位を支配する（実測でそうなっていた）
+    weighted = (WEIGHTS["skill"] * normalize("skill", sk)
+                + WEIGHTS["comp"] * normalize("comp", cp)
+                + WEIGHTS["wish"] * normalize("wish", wi)
+                + WEIGHTS["collab"] * normalize("collab", co)
+                + WEIGHTS["growth"] * normalize("growth", gr)
+                + WEIGHTS["network"] * normalize("network", nw))
 
     # 必須スキル充足率で減衰。DAMPING_FLOOR より下には落とさず、
     # ゲートを通った候補同士の相対順位を保つ
