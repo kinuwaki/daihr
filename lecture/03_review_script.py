@@ -64,8 +64,13 @@ def check_symbols(files):
         d = json.loads(f.read_text(encoding="utf-8"))
         for c in d["cuts"]:
             cuts += 1
+            speech = c["speech"]
+            # 漢数字にはさまれた中黒は小数点（〇・三五）なので読み上げ上は正しい。
+            # 並列の中黒だけを検出したいので、小数点は検査対象から外す。
+            checked = re.sub(r"(?<=[〇一二三四五六七八九十])・(?=[〇一二三四五六七八九十])",
+                             "", speech)
             for ch, label in FORBIDDEN.items():
-                if ch in c["speech"]:
+                if ch in checked:
                     hits[label] += 1
                     samples.setdefault(label, (f.name, c["no"], c["speech"][:70]))
     print(f"   検査カット {cuts:,}")
