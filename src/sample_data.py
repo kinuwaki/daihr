@@ -153,6 +153,16 @@ LOCATIONS = ["大阪", "東京", "京都", "神戸", "海外"]
 
 ROLES = ["担当", "主任", "係長", "課長"]
 
+# 育成コース。Daigasの育成コース制（マイスター／マネジメント／
+# ゼネラル／スペシャリスト）に相当する区分。
+COURSES = ["マイスター", "マネジメント", "ゼネラル", "スペシャリスト"]
+
+# 転居を伴う異動が起きやすい部署。事業所が地域に分散している部門。
+# 大阪ガスネットワークの5事業部（大阪／南部／北東部／兵庫／京滋）は
+# 公式サイトで確認済みで、地域分散型の代表例。
+RELOCATION_DEPTS = {"ネットワーク", "ガス製造・エンジニアリング", "電力",
+                    "資源・海外"}
+
 
 def generate(n_employees: int = 240, n_positions: int = 24, seed: int = 42):
     """架空の社員・ポジション・異動履歴を生成する。
@@ -212,6 +222,9 @@ def generate(n_employees: int = 240, n_positions: int = 24, seed: int = 42):
                           for c in rng.sample(COMPETENCIES,
                                               k=rng.randint(3, len(COMPETENCIES)))},
             eval_consent=rng.random() < 0.9,
+            # 育児・介護・持ち家などで転居できない社員は一定数いる
+            relocatable=rng.random() < 0.7,
+            career_course=rng.choice(COURSES),
             gender=rng.choice(["男性", "女性"]),
             age_band=rng.choice(["20代", "30代", "40代", "50代"]),
         ))
@@ -247,6 +260,9 @@ def generate(n_employees: int = 240, n_positions: int = 24, seed: int = 42):
                                     k=rng.randint(1, 2))
             },
             required_certifications=certs,
+            requires_relocation=(dept in RELOCATION_DEPTS
+                                 and rng.random() < 0.5),
+            career_course=rng.choice(COURSES) if rng.random() < 0.5 else "",
             description=f"{DEPT_SEGMENT[dept]}セグメントの{dept}部門における"
                         f"実務および改善推進を担当する。",
             headcount=rng.randint(1, 3),

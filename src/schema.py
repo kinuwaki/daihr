@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 FEATURE_FIELDS = frozenset({
     "skills", "experience_years", "current_dept", "current_role",
     "grade", "location", "certifications", "career_wish", "past_depts",
-    "competencies",
+    "competencies", "career_course", "relocatable", "home_location",
 })
 
 # 公平性監査でのみ参照。モデル入力に混ぜてはいけない
@@ -45,6 +45,18 @@ class Employee:
     career_wish: str = ""           # 自己申告のキャリア希望（自由記述）
     past_depts: list[str] = field(default_factory=list)
     mobility_ok: bool = True        # 異動可否フラグ（本人同意・制約）
+
+    # --- 勤務地の制約 ---
+    # エネルギー事業は事業所が地域に分散しているため、転居を伴う異動が発生する。
+    # 育児・介護・持ち家などで転居できない社員を、勤務地条件で確実に除外する。
+    # ここをスコアで扱うと「他のスコアが高ければ転居不可の人が候補に出る」ことになる。
+    relocatable: bool = True        # 転居を伴う異動が可能か
+    home_location: str = ""         # 生活拠点。空なら current の勤務地を使う
+
+    # 育成コース。Daigasの育成コース制（マイスター／マネジメント／
+    # ゼネラル／スペシャリスト）に相当する区分を想定している。
+    # 本人が選んだコースと異なる方向の異動は、意向確認が必要になる。
+    career_course: str = ""
 
     # --- 以下は監査専用。特徴量に使わない ---
     gender: str = ""
@@ -100,6 +112,14 @@ class Position:
     required_competencies: dict[str, int] = field(default_factory=dict)
 
     required_certifications: list[str] = field(default_factory=list)
+
+    # 転居が必要なポジションか。事業所が地域に分散する事業では、
+    # 勤務地が変わる異動と変わらない異動を区別しないと候補が現実的にならない。
+    requires_relocation: bool = False
+
+    # このポジションが想定する育成コース。空なら不問
+    career_course: str = ""
+
     description: str = ""
     headcount: int = 1
 
