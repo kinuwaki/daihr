@@ -67,8 +67,12 @@ def check_symbols(files):
             speech = c["speech"]
             # 漢数字にはさまれた中黒は小数点（〇・三五）なので読み上げ上は正しい。
             # 並列の中黒だけを検出したいので、小数点は検査対象から外す。
-            checked = re.sub(r"(?<=[〇一二三四五六七八九十])・(?=[〇一二三四五六七八九十])",
-                             "", speech)
+            # 漢数字（「ゼロ」表記も含む）にはさまれた中黒は小数点であり、
+            # 読み上げ上は正しい。並列の中黒だけを検出したいので除外する。
+            checked = re.sub(
+                r"(?<=[〇一二三四五六七八九十])・(?=[〇一二三四五六七八九十])",
+                "", speech)
+            checked = re.sub(r"ゼロ・(?=[〇一二三四五六七八九十])", "", checked)
             for ch, label in FORBIDDEN.items():
                 if ch in checked:
                     hits[label] += 1
