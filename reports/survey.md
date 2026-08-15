@@ -18,6 +18,7 @@
 | **[日本国内の人材マッチング技術](japan-hr-tech.md)** | 国内学会と企業技術ブログ。**日本語で読める実務知見** |
 | **[スキル定義化・スキル正規化](skill-extraction-normalization.md)** | スキル抽出と正規化の専門サーベイ。**用語定義・公開データ・ESCO公式評価** |
 | [Daigas向け調査レポート](daigas-report.md) | 特定企業向けの導入検討資料 |
+| [Daigasのスキル定義](daigas-skill-taxonomy.md) | 同社が実際に何をスキルと定義しているか。**人的資本レポート2025より** |
 | [設計メモ](design.md) | PoC実装の設計判断 |
 
 ---
