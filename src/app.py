@@ -26,7 +26,7 @@ from matcher import (
     match_candidates_for_position,
     match_positions_for_employee,
 )
-from sample_data import generate
+from sample_data import DEPT_SEGMENT, generate
 
 st.set_page_config(page_title="異動支援AI (PoC)", page_icon="🔁", layout="wide")
 
@@ -47,8 +47,9 @@ def render_candidate(rank: int, r) -> None:
         head, score = st.columns([4, 1])
         with head:
             st.markdown(f"**{rank}. {e.name}**  `{e.emp_id}`")
+            seg = DEPT_SEGMENT.get(e.current_dept, "")
             st.caption(
-                f"{e.current_dept} {e.current_role} / 等級{e.grade} / "
+                f"{seg} ／ {e.current_dept} {e.current_role} / 等級{e.grade} / "
                 f"{e.location} / 経験{e.experience_years}年"
             )
         with score:
@@ -57,6 +58,7 @@ def render_candidate(rank: int, r) -> None:
         left, right = st.columns([1, 1])
         with left:
             score_bar("スキル", r.skill_score, WEIGHTS["skill"])
+            score_bar("評価（コンピテンシー）", r.comp_score, WEIGHTS["comp"])
             score_bar("本人希望", r.wish_score, WEIGHTS["wish"])
             score_bar("異動経路", r.collab_score, WEIGHTS["collab"])
             score_bar("育成機会", r.growth_score, WEIGHTS["growth"])
@@ -86,6 +88,8 @@ def main() -> None:
         st.subheader("スコア重み")
         st.caption("人事の方針に合わせて調整してください")
         WEIGHTS["skill"] = st.slider("スキル", 0.0, 1.0, WEIGHTS["skill"], 0.05)
+        WEIGHTS["comp"] = st.slider("評価（コンピテンシー）", 0.0, 1.0,
+                                    WEIGHTS["comp"], 0.05)
         WEIGHTS["wish"] = st.slider("本人希望", 0.0, 1.0, WEIGHTS["wish"], 0.05)
         WEIGHTS["collab"] = st.slider("異動経路", 0.0, 1.0, WEIGHTS["collab"], 0.05)
         WEIGHTS["growth"] = st.slider("育成機会", 0.0, 1.0, WEIGHTS["growth"], 0.05)
@@ -111,7 +115,10 @@ def main() -> None:
 
     # --- ポジション起点 ---
     with tab1:
-        labels = {f"[{p.pos_id}] {p.dept} / {p.title}": p for p in positions}
+        labels = {
+            f"[{p.pos_id}] {DEPT_SEGMENT.get(p.dept, '')} / {p.dept} / {p.title}": p
+            for p in positions
+        }
         pos = labels[st.selectbox("募集ポジション", list(labels))]
 
         c1, c2, c3 = st.columns(3)
@@ -127,6 +134,12 @@ def main() -> None:
             st.markdown(
                 "**歓迎スキル**: "
                 + "、".join(f"`{k}`({v})" for k, v in pos.preferred_skills.items())
+            )
+        if pos.required_competencies:
+            st.markdown(
+                "**求めるコンピテンシー**: "
+                + "、".join(f"`{k}`(要{v})"
+                           for k, v in pos.required_competencies.items())
             )
         if pos.required_certifications:
             st.markdown(f"**必須資格**: {'、'.join(pos.required_certifications)}")

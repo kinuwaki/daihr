@@ -52,8 +52,8 @@ def main() -> None:
         print(f"   現職: {e.current_dept} {e.current_role} / 等級{e.grade} "
               f"/ {e.location} / 経験{e.experience_years}年")
         print(f"   内訳: スキル{r.skill_score:.2f}(必須充足{r.req_score:.0%}) "
-              f"希望{r.wish_score:.2f} 経路{r.collab_score:.2f} "
-              f"育成{r.growth_score:.2f}")
+              f"評価{r.comp_score:.2f} 希望{r.wish_score:.2f} "
+              f"経路{r.collab_score:.2f} 育成{r.growth_score:.2f}")
         for reason in r.reasons:
             print(f"   - {reason}")
         print()

@@ -92,7 +92,7 @@ def card(kind, badge, title, inner, tight=False):
             f'<h3><span class="badge">{badge}</span>{esc(title)}</h3>{inner}</div>')
 
 
-BADGE = {"law": "📐", "pitfall": "⚠️", "point": "📌", "case": "💡"}  # daihr: 設計原則📐 / 落とし穴⚠️ / 実例💡
+BADGE = {"law": "📐", "pitfall": "⚠️", "point": "📌", "case": "💡"}  # kikuhr: 設計原則📐 / 落とし穴⚠️ / 実例💡
 
 
 def stage_html(cut, img_base):
@@ -238,7 +238,7 @@ def stage_html(cut, img_base):
         return ('<div class="stage outro-slide">'
                 f'<h2>{esc(d["title"])}</h2>'
                 f'<div class="app">{esc(d["app"])}</div>'
-                '<div class="note">アプリの一問一答で、解いて定着させましょう。</div>'
+                '<div class="note">実装の詳細はリポジトリのコードを参照してください。</div>'
                 f'<div class="credits">{"<br>".join(esc(c) for c in d["credits"])}</div>'
                 '</div>')
 

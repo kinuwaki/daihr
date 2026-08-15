@@ -13,15 +13,16 @@ embedding を使う場合は skill_score を意味的類似度に差し替える
 """
 
 from collections import Counter, defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from schema import Employee, Position, TransferRecord
 
 # 各スコアの重み。人事と調整する前提で外出ししてある
 WEIGHTS = {
-    "skill": 0.45,
-    "wish": 0.25,
-    "collab": 0.20,
+    "skill": 0.35,
+    "comp": 0.20,     # コンピテンシー評価との適合
+    "wish": 0.20,
+    "collab": 0.15,
     "growth": 0.10,
 }
 
@@ -42,12 +43,15 @@ class MatchResult:
     total_score: float
     skill_score: float
     req_score: float          # 必須スキルのみの充足率。ゲート・減衰の判定に使う
+    comp_score: float         # コンピテンシー評価との適合
     wish_score: float
     collab_score: float
     growth_score: float
     matched_skills: list[str]
     missing_skills: list[tuple[str, int, int]]   # (スキル名, 必要, 現在)
-    reasons: list[str]
+    met_competencies: list[str] = field(default_factory=list)
+    missing_competencies: list = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
 
     def gap_summary(self) -> str:
         if not self.missing_skills:
@@ -103,6 +107,42 @@ def skill_score(emp: Employee, pos: Position) -> tuple[float, float, list[str], 
 
     combined = 0.75 * req_score + 0.25 * pref_score
     return combined, req_score, matched, missing
+
+
+def competency_score(emp: Employee, pos: Position) -> tuple[float, list, list]:
+    """人事評価のコンピテンシー項目と、ポジションが求める水準の適合。
+
+    スキル（何ができるか）とは別軸で、行動特性の適合を見る。
+    戻り値は (スコア, 満たした項目, 不足項目[(名, 要, 現)])。
+
+    評価データを使う以上、次の三つを守る:
+      1. 総合評価点は使わない。項目別評価だけを使う（選別にしないため）
+      2. 本人同意が無ければ参照しない（usable_competencies が空を返す）
+      3. 評価が無い人を不利にしない。データが無い場合は中立の 0.5 を返す
+
+    3 が重要で、ここをゼロにすると「評価がまだ無い異動直後の社員」や
+    「同意していない社員」が構造的に候補から外れる。
+    """
+    need = pos.required_competencies
+    if not need:
+        return 0.5, [], []
+
+    have = emp.usable_competencies()
+    if not have:
+        # 同意が無い、または評価データが無い。中立に倒す
+        return 0.5, [], []
+
+    met, missing, total = [], [], 0.0
+    for name, want in need.items():
+        got = have.get(name, 0)
+        if got == 0:
+            # その項目の評価が存在しない。中立扱いにして不足に数えない
+            total += 0.5
+            continue
+        total += min(1.0, got / want) if want else 1.0
+        (met if got >= want else missing).append(
+            name if got >= want else (name, want, got))
+    return total / len(need), met, missing
 
 
 def wish_score(emp: Employee, pos: Position) -> float:
@@ -198,12 +238,14 @@ def score_pair(emp: Employee, pos: Position, graph: dict) -> "MatchResult | None
     if req < SKILL_FLOOR:
         return None
 
+    cp, met_c, miss_c = competency_score(emp, pos)
     wi = wish_score(emp, pos)
     co = collab_score(emp, pos, graph)
     gr = growth_score(emp, pos)
 
-    weighted = (WEIGHTS["skill"] * sk + WEIGHTS["wish"] * wi
-                + WEIGHTS["collab"] * co + WEIGHTS["growth"] * gr)
+    weighted = (WEIGHTS["skill"] * sk + WEIGHTS["comp"] * cp
+                + WEIGHTS["wish"] * wi + WEIGHTS["collab"] * co
+                + WEIGHTS["growth"] * gr)
 
     # 必須スキル充足率で減衰。DAMPING_FLOOR より下には落とさず、
     # ゲートを通った候補同士の相対順位を保つ
@@ -212,9 +254,10 @@ def score_pair(emp: Employee, pos: Position, graph: dict) -> "MatchResult | None
 
     r = MatchResult(
         employee=emp, position=pos, total_score=total,
-        skill_score=sk, req_score=req, wish_score=wi,
+        skill_score=sk, req_score=req, comp_score=cp, wish_score=wi,
         collab_score=co, growth_score=gr,
-        matched_skills=matched, missing_skills=missing, reasons=[],
+        matched_skills=matched, missing_skills=missing,
+        met_competencies=met_c, missing_competencies=miss_c,
     )
     r.reasons = build_reasons(r)
     return r
@@ -225,6 +268,14 @@ def build_reasons(r: "MatchResult") -> list[str]:
     reasons = []
     if r.matched_skills:
         reasons.append(f"適合スキル: {'、'.join(r.matched_skills[:4])}")
+    if r.met_competencies:
+        reasons.append(
+            f"評価で水準を満たすコンピテンシー: {'、'.join(r.met_competencies[:3])}")
+    if r.missing_competencies:
+        gap = "、".join(f"{n}(要{w}/現{g})" for n, w, g in r.missing_competencies[:3])
+        reasons.append(f"コンピテンシーが水準未達: {gap}")
+    if r.position.required_competencies and not r.employee.eval_consent:
+        reasons.append("※評価データの利用同意が未取得。評価は考慮していない")
     if r.wish_score >= 0.8 and r.employee.career_wish:
         reasons.append(f"本人希望と整合: 「{r.employee.career_wish}」")
     if r.collab_score >= 0.7:

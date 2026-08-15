@@ -481,7 +481,7 @@ def to_cuts(gen, ch, sec, label, blocks):
             add("heading", c.get("speech", ""), {"title": heading or sec["title"]}, heading)
 
     add("outro", "この節はここまでです。実装の詳細はリポジトリのコードを見てください。",
-        {"title": "おつかれさまでした", "app": "github.com/kinuwaki/daihr",
+        {"title": "おつかれさまでした", "app": "github.com/kinuwaki/kikuhr",
          "credits": CREDITS})
     return cuts
 
