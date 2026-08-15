@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>社内異動支援AI — 仕様解説</title>
+<style>
+:root {
+  --ink: #1b2430;
+  --ink-soft: #55616f;
+  --accent: #1565C0;
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --line: #d3dce6;
+  --deep: #0d1b2a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic",
+               "Noto Sans JP", system-ui, sans-serif;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+header {
+  background: var(--deep);
+  color: #fff;
+  padding: 40px 24px 36px;
+  text-align: center;
+}
+header h1 { font-size: 28px; margin-bottom: 8px; }
+header .sub { color: #b9c6d6; font-size: 15px; }
+header .meta { color: #8ea3b8; font-size: 13px; margin-top: 14px; }
+header a { color: #9ec5f0; }
+
+.wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+
+video {
+  width: 100%;
+  background: #000;
+  border-radius: 10px;
+  display: block;
+  box-shadow: 0 2px 10px rgba(13,27,42,.12);
+}
+
+.note {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 24px 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+h2 {
+  font-size: 20px;
+  color: var(--deep);
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 10px;
+  margin: 40px 0 18px;
+}
+
+ol.chapters { list-style: none; }
+ol.chapters li {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  transition: border-color .15s;
+}
+ol.chapters li:hover { border-color: var(--accent); }
+ol.chapters button {
+  font: inherit;
+  color: var(--accent);
+  background: #eef3fa;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+ol.chapters button:hover { background: #dce8f7; }
+ol.chapters .t { flex: 1 1 auto; }
+
+.links a {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 10px 18px;
+  margin: 0 8px 8px 0;
+}
+.links a:hover { border-color: var(--accent); }
+
+footer {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  padding: 24px;
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 600px) {
+  header h1 { font-size: 22px; }
+  ol.chapters li { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>社内異動支援AI — 仕様解説</h1>
+  <div class="sub">データ構造・スコアの計算式・公平性検査の判定基準</div>
+  <div class="meta">
+    30分 ／ 字幕つき ／
+    <a href="https://github.com/kinuwaki/daihr">github.com/kinuwaki/daihr</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <video id="v" controls preload="metadata" playsinline
+         poster="poster.jpg">
+    <source src="hr_ch01_full.mp4" type="video/mp4">
+    <track kind="captions" src="hr_ch01_full.vtt" srclang="ja"
+           label="日本語" default>
+    お使いのブラウザは動画再生に対応していません。
+    <a href="hr_ch01_full.mp4">ダウンロード</a>してご覧ください。
+  </video>
+
+  <div class="note">
+    字幕は再生プレイヤーの字幕ボタンから切り替えられます。
+    節のボタンを押すとその位置から再生します。
+  </div>
+
+  <h2>目次</h2>
+  <ol class="chapters">
+    <li><button data-t="0">00:00</button><span class="t">データ構造 — 特徴量と監査専用属性の分離</span></li>
+    <li><button data-t="244">04:04</button><span class="t">ハードフィルタ — 除外条件と除外理由の記録</span></li>
+    <li><button data-t="417">06:57</button><span class="t">四つのスコア — スキル適合・本人希望・異動経路・育成機会</span></li>
+    <li><button data-t="809">13:29</button><span class="t">スコアの合成 — ゲートと減衰</span></li>
+    <li><button data-t="1032">17:12</button><span class="t">推薦理由の生成 — 返すべき情報</span></li>
+    <li><button data-t="1230">20:30</button><span class="t">公平性検査 — 判定基準と多重比較補正</span></li>
+    <li><button data-t="1589">26:29</button><span class="t">実装上の制約 — 評価データ、AIは決定しない</span></li>
+  </ol>
+
+  <h2>関連</h2>
+  <div class="links">
+    <a href="https://github.com/kinuwaki/daihr">リポジトリ</a>
+    <a href="spec.html">仕様書（テキスト版）</a>
+    <a href="https://github.com/kinuwaki/daihr#readme">README</a>
+  </div>
+
+</div>
+
+<footer>
+  音声 VOICEVOX:春日部つむぎ ／ MIT License
+</footer>
+
+<script>
+  const v = document.getElementById('v');
+  for (const b of document.querySelectorAll('.chapters button')) {
+    b.addEventListener('click', () => {
+      v.currentTime = Number(b.dataset.t);
+      v.play();
+      v.scrollIntoView({behavior: 'smooth', block: 'start'});
+    });
+  }
+</script>
+
+</body>
+</html>
